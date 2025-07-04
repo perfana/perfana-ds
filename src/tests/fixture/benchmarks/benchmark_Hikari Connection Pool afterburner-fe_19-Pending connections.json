@@ -1,0 +1,30 @@
+{
+  "_id": "685117453ee5aa64ef8bdd81",
+  "application": "MyAfterburner",
+  "testType": "loadTest",
+  "testEnvironment": "acc",
+  "grafana": "Default",
+  "dashboardLabel": "Hikari Connection Pool afterburner-fe",
+  "dashboardId": 6,
+  "dashboardUid": "spring-boot-kubernetes-hickari-cp-mimir",
+  "panel": {
+    "id": 19,
+    "title": "19-Pending connections",
+    "type": "timeseries",
+    "yAxesFormat": "short",
+    "requirement": {"operator": "lt", "value": 10},
+    "excludeRampUpTime": true,
+    "averageAll": false,
+    "validateWithDefaultIfNoData": false,
+    "validateWithDefaultIfNoDataValue": 0,
+    "evaluateType": "max",
+    "benchmark": {"operator": "pst", "value": 2}
+  },
+  "excludeRampupTime": false,
+  "averageAll": false,
+  "valid": true,
+  "genericCheckId": "spring-boot-kubernetes-spring-boot-kubernetes-hickari-cp-mimir-19",
+  "perfanaInfo": "Created or updated by Perfana Kotlin 2025-06-17T07:20:37.219510303Z",
+  "_class": "io.perfana.shared.Benchmark",
+  "applicationDashboardId": "6849ad8f8ee8024998d31f90"
+}

@@ -1,0 +1,111 @@
+# PEP-518 https://peps.python.org/pep-0518/
+[build-system]
+# Minimum requirements for the build system to execute.
+requires = ["setuptools>=65.5.1"]  # PEP 518 specifications
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "perfana-ds"
+description = "Data-science REST api service for Perfana."
+readme = "README.md"
+requires-python = ">=3.10"
+#license = {file = "LICENSE.txt"}
+keywords = ["data-science", "kedro", "fastapi", "kedro"]
+authors = [
+  {name = "Perfana"}
+]
+maintainers = [
+  {name = "Lodewic van Twillert", email = "lodewic@perfana.io"}
+]
+classifiers = [
+  "Programming Language :: Python"
+]
+version = "0.2.7"
+
+dependencies = [
+    "pydantic~=2.6",
+    "pydantic-settings~=2.0",
+    "fastapi~=0.110",
+    "celery~=5.3",
+    "pandas~=2.2",
+    "orjson>=3.8.5",
+    "uvicorn~=0.27",
+    "pymongo~=4.6",
+    "httpx~=0.26",
+    "pymongoarrow~=1.3",
+    "motor~=3.5",
+    "celery~=5.3",
+    "gevent~=24.2",
+    "flower",
+]
+
+
+[project.optional-dependencies]
+test = [
+    "pytest==8.3.3",
+    "pytest-cov>=2.5.1",
+    "pytest-dotenv>=0.5.2"
+]
+dev = [
+    "plotly~=5.18",
+    "matplotlib",
+    "pre-commit~=4.0",
+]
+
+[project.urls]
+homepage = "https://perfana.io"
+documentation = "https://perfana.io"
+repository = "https://github.com/perfana/perfana-ds-fastapi"
+
+[tool.setuptools.packages.find]
+where = ["./src"]  # list of folders that contain the packages (["."] by default)
+include = ["perfana_ds", "perfana_ds_api"]  # package names should match these glob patterns (["*"] by default)
+exclude = []  # exclude packages matching these glob patterns (empty by default)
+
+[tool.setuptools.dynamic]
+version = {attr = "perfana_ds.__version__"}
+
+[tool.pytest.ini_options]
+addopts = """
+./src/tests/
+--cov-report term-missing \
+--cov perfana_ds -ra
+"""
+
+[tool.coverage.report]
+fail_under = 0
+show_missing = true
+exclude_lines = ["pragma: no cover", "raise NotImplementedError"]
+
+[tool.ruff]
+select = [
+    "F",  # Pyflakes
+    "E",  # Pycodestyle
+    "W",  # Pycodestyle
+    "UP",  # pyupgrade
+    "I",  # isort
+    "PL", # Pylint
+]
+ignore = ["E501"]  # Black take care of line-too-long
+[tool.ruff.per-file-ignores]
+"./**.ipynb" = ["F821", "F704", "E402", "PLE1142"]
+"./**/__init__.py" = ["F401"]  # allow unused imports in __init__.py files
+
+[tool.ruff.pylint]
+max-args = 15
+
+[tool.ruff.isort]
+known-first-party = ["perfana_ds", "perfana_ds_api"]
+
+[tool.ruff.flake8-tidy-imports]
+# Disallow all relative imports.
+ban-relative-imports = "all"
+
+[tool.black]
+line_length = 88
+
+[tool.mypy]
+ignore_missing_imports = true
+exclude = ".venv"
+allow_redefinition = true
+no_implicit_optional=false

@@ -1,0 +1,31 @@
+{
+  "_id": "6849ad8f8ee8024998d31fb1",
+  "application": "MyAfterburner",
+  "testType": "loadTest",
+  "testEnvironment": "acc",
+  "grafana": "Default",
+  "dashboardLabel": "JFR Exporter afterburner-fe",
+  "dashboardId": 7,
+  "dashboardUid": "jfr-exporter-influxdb",
+  "panel": {
+    "id": 2,
+    "title": "2-CPU",
+    "type": "timeseries",
+    "yAxesFormat": "percent",
+    "requirement": {"operator": "lt", "value": 70},
+    "benchmark": {"operator": "pst", "value": 10, "absoluteFailureThreshold": 0},
+    "excludeRampUpTime": true,
+    "averageAll": true,
+    "validateWithDefaultIfNoData": false,
+    "validateWithDefaultIfNoDataValue": 0,
+    "evaluateType": "avg"
+  },
+  "excludeRampupTime": false,
+  "averageAll": false,
+  "valid": true,
+  "genericCheckId": "jfr-jfr-exporter-influxdb-2",
+  "perfanaInfo": "Created or updated by Perfana Kotlin 2025-06-11T16:23:43.783603138Z",
+  "_class": "io.perfana.shared.Benchmark",
+  "evaluateType": "avg",
+  "applicationDashboardId": "6849ad8f8ee8024998d31fa4"
+}

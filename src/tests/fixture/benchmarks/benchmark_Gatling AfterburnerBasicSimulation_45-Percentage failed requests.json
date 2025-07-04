@@ -1,0 +1,24 @@
+{
+  "_id": "C53SaP9hmaHBiGqWx",
+  "application": "MyAfterburner",
+  "testType": "loadTest",
+  "testEnvironment": "acc",
+  "grafana": "Default",
+  "dashboardLabel": "Gatling AfterburnerBasicSimulation",
+  "dashboardId": 23,
+  "dashboardUid": "gatling-overview-influxdb",
+  "applicationDashboardId": "6849adad8ee8024998d31fb5",
+  "panel": {
+    "title": "45-Percentage failed requests",
+    "id": 45,
+    "type": "timeseries",
+    "yAxesFormat": "percent",
+    "evaluateType": "last",
+    "requirement": {"operator": "lt", "value": 2},
+    "excludeRampUpTime": true,
+    "validateWithDefaultIfNoData": false,
+    "averageAll": false,
+    "benchmark": {"operator": "pst", "value": 2}
+  },
+  "valid": true
+}

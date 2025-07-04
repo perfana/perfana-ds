@@ -1,0 +1,25 @@
+{
+  "_id": "iqyvs5Lv2NuL5BseF",
+  "application": "MyAfterburner",
+  "testType": "loadTest",
+  "testEnvironment": "acc",
+  "grafana": "Default",
+  "dashboardLabel": "Gatling AfterburnerBasicSimulation",
+  "dashboardId": 23,
+  "dashboardUid": "gatling-overview-influxdb",
+  "applicationDashboardId": "6849adad8ee8024998d31fb5",
+  "panel": {
+    "title": "37-Total failed requests per second",
+    "id": 37,
+    "type": "timeseries",
+    "yAxesFormat": "reqps",
+    "evaluateType": "avg",
+    "benchmark": {"operator": "pst-pct", "value": 10},
+    "excludeRampUpTime": true,
+    "averageAll": false,
+    "validateWithDefaultIfNoData": true,
+    "validateWithDefaultIfNoDataValue": 0,
+    "requirement": {"operator": "lt", "value": 2}
+  },
+  "valid": true
+}

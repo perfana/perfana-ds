@@ -1,0 +1,57 @@
+{
+  "_id": "testRun_MyAfterburner-acc-loadTest-00004",
+  "testRunId": "MyAfterburner-acc-loadTest-00004",
+  "CIBuildResultsUrl": "unknown",
+  "abort": false,
+  "adapt": {
+    "mode": "BASELINE",
+    "differencesAccepted": "ACCEPTED"
+  },
+  "alerts": [],
+  "annotations": "",
+  "application": "MyAfterburner",
+  "applicationRelease": "2.4.3-good-baseline",
+  "completed": true,
+  "duration": 307,
+  "end": "2025-06-11T16:28:51.111Z",
+  "expired": false,
+  "expires": 7776000,
+  "plannedDuration": 360,
+  "rampUp": 60,
+  "reasonsNotValid": [],
+  "start": "2025-06-11T16:23:43.167Z",
+  "status": {
+    "creatingSnapshots": "COMPLETE",
+    "evaluatingChecks": "COMPLETE",
+    "evaluatingComparisons": "COMPLETE",
+    "evaluatingAdapt": "COMPLETE",
+    "lastUpdate": "2025-06-13T21:24:34.822Z"
+  },
+  "tags": [
+    "gatling",
+    "spring-boot-kubernetes",
+    "jfr",
+    "spanmetrics",
+    "docker"
+  ],
+  "testEnvironment": "acc",
+  "testType": "loadTest",
+  "valid": true,
+  "variables": [
+    {
+      "placeholder": "perfana-containers",
+      "value": "perfana-demo-afterburner*"
+    }
+  ],
+  "consolidatedResult": {
+    "meetsRequirement": true,
+    "benchmarkPreviousTestRunOK": true,
+    "benchmarkBaselineTestRunOK": true,
+    "adaptTestRunOK": true,
+    "overall": true
+  },
+  "version": 198,
+  "viewedBy": [
+    "zvaJZ5A3MhQABoD5B"
+  ]
+}

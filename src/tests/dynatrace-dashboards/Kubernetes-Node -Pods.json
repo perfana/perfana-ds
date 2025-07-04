@@ -1,0 +1,2100 @@
+{
+  "version": 17,
+  "variables": [
+    {
+      "key": "Cluster",
+      "type": "query",
+      "input": "fetch dt.entity.kubernetes_cluster\n| fields entity.name\n| sort entity.name asc",
+      "multiple": false,
+      "visible": true,
+      "version": 1
+    },
+    {
+      "key": "Node",
+      "type": "query",
+      "visible": true,
+      "input": "fetch dt.entity.kubernetes_node\n| fields id, node.name = entity.name\n| filter in(id, classicEntitySelector(concat(\"type(KUBERNETES_NODE),toRelationship.isClusterOfNode(type(KUBERNETES_CLUSTER),entityName.equals(\",$Cluster,\"))\")))\n| summarize collectDistinct(node.name)\n| fieldsAdd `collectDistinct(node.name)` = arraySort(`collectDistinct(node.name)`, direction: \"ascending\")",
+      "multiple": false,
+      "version": 1
+    },
+    {
+      "key": "NodeID",
+      "type": "query",
+      "visible": false,
+      "input": "fetch dt.entity.kubernetes_node\n| filter entity.name==$Node\n| filter in(id, classicEntitySelector(concat(\"type(KUBERNETES_NODE),toRelationship.isClusterOfNode(type(KUBERNETES_CLUSTER),entityName.equals(\", $Cluster,\"))\")))\n| fields id",
+      "multiple": false,
+      "version": 1
+    }
+  ],
+  "tiles": {
+    "6": {
+      "type": "data",
+      "title": "CPU Utilization",
+      "query": "timeseries {\n  valuesOp1 = sum(dt.kubernetes.container.cpu_usage),\n  valuesOp2 = sum(dt.kubernetes.node.cpu_allocatable)\n}, filter: {\n  k8s.cluster.name == $Cluster AND\n  k8s.node.name == $Node\n}, from: -2m\n| fieldsAdd cpu_usage_percent = valuesOp1[] / valuesOp2[] * 100\n| fieldsAdd cpu_usage_percent = arrayFirst(cpu_usage_percent)\n",
+      "davis": {
+        "enabled": false,
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      },
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "thresholds": [
+          {
+            "id": 1,
+            "field": "cpu_usage_percent",
+            "title": "",
+            "isEnabled": true,
+            "rules": [
+              {
+                "id": 0,
+                "color": {
+                  "Default": "var(--dt-colors-charts-status-ideal-default, #2f6863)"
+                },
+                "comparator": "≥",
+                "label": "",
+                "value": 0
+              },
+              {
+                "id": 1,
+                "color": {
+                  "Default": "var(--dt-colors-charts-status-warning-default, #eca440)"
+                },
+                "comparator": "≥",
+                "label": "",
+                "value": 70
+              },
+              {
+                "id": 2,
+                "color": {
+                  "Default": "var(--dt-colors-charts-status-critical-default, #c4233b)"
+                },
+                "comparator": "≥",
+                "label": "",
+                "value": 90
+              }
+            ]
+          }
+        ],
+        "chartSettings": {
+          "xAxisScaling": "analyzedTimeframe",
+          "gapPolicy": "connect",
+          "circleChartSettings": {
+            "groupingThresholdType": "relative",
+            "groupingThresholdValue": 0,
+            "valueType": "relative"
+          },
+          "categoryOverrides": {},
+          "categoricalBarChartSettings": {
+            "categoryAxisLabel": "interval,cpu_usage_percent",
+            "valueAxisLabel": "cpu_usage_percent",
+            "categoryAxis": [
+              "interval",
+              "cpu_usage_percent"
+            ],
+            "valueAxis": [
+              "cpu_usage_percent"
+            ],
+            "tooltipVariant": "single"
+          },
+          "fieldMapping": {
+            "timestamp": "timeframe",
+            "leftAxisValues": [
+              "valuesOp1",
+              "valuesOp2"
+            ]
+          },
+          "hiddenLegendFields": [],
+          "bandChartSettings": {
+            "lower": "valuesOp1",
+            "upper": "valuesOp2"
+          },
+          "truncationMode": "middle",
+          "xAxisLabel": "timeframe",
+          "xAxisIsLabelVisible": false,
+          "valueRepresentation": "absolute",
+          "leftYAxisSettings": {
+            "isLabelVisible": true,
+            "label": "Kubernetes: Container - CPU usage • Kubernetes: Node - CPU allocatable"
+          }
+        },
+        "singleValue": {
+          "showLabel": false,
+          "label": "cpu_usage_percent",
+          "prefixIcon": "",
+          "recordField": "cpu_usage_percent",
+          "autoscale": true,
+          "sparklineSettings": {
+            "isVisible": false,
+            "showTicks": false,
+            "record": "valuesOp2"
+          },
+          "alignment": "center",
+          "trend": {
+            "isVisible": false,
+            "trendType": "auto",
+            "upward": {
+              "Default": "var(--dt-colors-charts-categorical-color-02-default, #2c2f3f)"
+            },
+            "neutral": {
+              "Default": "var(--dt-colors-charts-categorical-color-02-default, #2c2f3f)"
+            },
+            "downward": {
+              "Default": "var(--dt-colors-charts-categorical-color-02-default, #2c2f3f)"
+            },
+            "isRelative": false
+          },
+          "colorThresholdTarget": "background"
+        },
+        "table": {
+          "rowDensity": "condensed",
+          "enableSparklines": false,
+          "hiddenColumns": [],
+          "lineWrapIds": [],
+          "columnWidths": {},
+          "columnTypeOverrides": [
+            {
+              "fields": [
+                "valuesOp1",
+                "valuesOp2"
+              ],
+              "value": "sparkline",
+              "id": 1734617361991
+            }
+          ]
+        },
+        "honeycomb": {
+          "shape": "hexagon",
+          "legend": "auto",
+          "dataMappings": {},
+          "displayedFields": [],
+          "colorMode": "color-palette",
+          "colorPalette": "blue"
+        },
+        "histogram": {
+          "dataMappings": [
+            {
+              "valueAxis": "interval",
+              "rangeAxis": ""
+            },
+            {
+              "valueAxis": "cpu_usage_percent",
+              "rangeAxis": ""
+            }
+          ],
+          "variant": "single",
+          "displayedFields": []
+        },
+        "valueBoundaries": {
+          "min": "auto",
+          "max": "auto"
+        },
+        "unitsOverrides": [
+          {
+            "identifier": "cpu_usage_percent",
+            "unitCategory": "percentage",
+            "baseUnit": "percent",
+            "displayUnit": null,
+            "decimals": 2,
+            "suffix": "",
+            "delimiter": false,
+            "added": 1716814972871
+          },
+          {
+            "identifier": "cpu_usage_percent_now",
+            "unitCategory": "percentage",
+            "baseUnit": "percent",
+            "displayUnit": null,
+            "decimals": 2,
+            "suffix": "",
+            "delimiter": false,
+            "added": 1734622711674
+          }
+        ],
+        "autoSelectVisualization": false
+      },
+      "querySettings": {
+        "maxResultRecords": 20000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 100,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      }
+    },
+    "7": {
+      "type": "data",
+      "title": "Memory Utilization",
+      "query": "timeseries {\n  valuesOp1 = sum(dt.kubernetes.container.memory_working_set),\n  valuesOp2 = sum(dt.kubernetes.node.memory_allocatable)\n}, filter: {\n  k8s.cluster.name == $Cluster AND\n  k8s.node.name == $Node\n}, from: -2m\n| fieldsAdd memory_usage_percent = valuesOp1[] / valuesOp2[] * 100\n| fieldsAdd memory_usage_percent = arrayFirst(memory_usage_percent)",
+      "davis": {
+        "enabled": false,
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      },
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "thresholds": [
+          {
+            "id": 1,
+            "field": "memory_usage_percent",
+            "title": "",
+            "isEnabled": true,
+            "rules": [
+              {
+                "id": 0,
+                "color": {
+                  "Default": "var(--dt-colors-charts-status-ideal-default, #2f6863)"
+                },
+                "comparator": "≥",
+                "label": "",
+                "value": 0
+              },
+              {
+                "id": 1,
+                "color": {
+                  "Default": "var(--dt-colors-charts-status-warning-default, #eca440)"
+                },
+                "comparator": "≥",
+                "label": "",
+                "value": 70
+              },
+              {
+                "id": 2,
+                "color": {
+                  "Default": "var(--dt-colors-charts-status-critical-default, #c4233b)"
+                },
+                "comparator": "≥",
+                "label": "",
+                "value": 90
+              }
+            ]
+          }
+        ],
+        "chartSettings": {
+          "xAxisScaling": "analyzedTimeframe",
+          "gapPolicy": "connect",
+          "circleChartSettings": {
+            "groupingThresholdType": "relative",
+            "groupingThresholdValue": 0,
+            "valueType": "relative"
+          },
+          "categoryOverrides": {},
+          "categoricalBarChartSettings": {
+            "categoryAxisLabel": "interval,memory_usage_percent",
+            "valueAxisLabel": "memory_usage_percent",
+            "categoryAxis": [
+              "interval",
+              "memory_usage_percent"
+            ],
+            "valueAxis": [
+              "memory_usage_percent"
+            ],
+            "tooltipVariant": "single"
+          },
+          "fieldMapping": {
+            "timestamp": "timeframe",
+            "leftAxisValues": [
+              "valuesOp1",
+              "valuesOp2"
+            ]
+          },
+          "hiddenLegendFields": [],
+          "bandChartSettings": {
+            "lower": "valuesOp1",
+            "upper": "valuesOp2"
+          },
+          "truncationMode": "middle",
+          "xAxisLabel": "timeframe",
+          "xAxisIsLabelVisible": false,
+          "valueRepresentation": "absolute",
+          "leftYAxisSettings": {
+            "isLabelVisible": true,
+            "label": "Kubernetes: Container - working set memory • Kubernetes: Node - memory allocatable"
+          }
+        },
+        "singleValue": {
+          "showLabel": false,
+          "label": "memory_usage_percent",
+          "prefixIcon": "",
+          "recordField": "memory_usage_percent",
+          "autoscale": true,
+          "sparklineSettings": {
+            "isVisible": false,
+            "showTicks": false,
+            "record": "valuesOp2"
+          },
+          "alignment": "center",
+          "trend": {
+            "isVisible": false,
+            "trendType": "auto",
+            "upward": {
+              "Default": "var(--dt-colors-charts-categorical-color-02-default, #2c2f3f)"
+            },
+            "neutral": {
+              "Default": "var(--dt-colors-charts-categorical-color-02-default, #2c2f3f)"
+            },
+            "downward": {
+              "Default": "var(--dt-colors-charts-categorical-color-02-default, #2c2f3f)"
+            },
+            "isRelative": false
+          },
+          "colorThresholdTarget": "background"
+        },
+        "table": {
+          "rowDensity": "condensed",
+          "enableSparklines": false,
+          "hiddenColumns": [],
+          "lineWrapIds": [],
+          "columnWidths": {},
+          "columnTypeOverrides": [
+            {
+              "fields": [
+                "valuesOp1",
+                "valuesOp2"
+              ],
+              "value": "sparkline",
+              "id": 1734617362201
+            }
+          ]
+        },
+        "honeycomb": {
+          "shape": "hexagon",
+          "legend": "auto",
+          "dataMappings": {},
+          "displayedFields": [],
+          "colorMode": "color-palette",
+          "colorPalette": "blue"
+        },
+        "histogram": {
+          "dataMappings": [
+            {
+              "valueAxis": "interval",
+              "rangeAxis": ""
+            },
+            {
+              "valueAxis": "memory_usage_percent",
+              "rangeAxis": ""
+            }
+          ],
+          "variant": "single",
+          "displayedFields": []
+        },
+        "valueBoundaries": {
+          "min": "auto",
+          "max": "auto"
+        },
+        "unitsOverrides": [
+          {
+            "identifier": "memory_usage_percent",
+            "unitCategory": "percentage",
+            "baseUnit": "percent",
+            "displayUnit": null,
+            "decimals": 2,
+            "suffix": "",
+            "delimiter": false,
+            "added": 1715164486934
+          }
+        ]
+      },
+      "querySettings": {
+        "maxResultRecords": 20000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 100,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      }
+    },
+    "8": {
+      "type": "data",
+      "title": "Pods Utilization",
+      "query": "timeseries {\n  valuesOp1 = sum(dt.kubernetes.pods),\n  valuesOp2 = sum(dt.kubernetes.node.pods_allocatable)\n}, filter: {\n  k8s.cluster.name == $Cluster AND\n  k8s.node.name == $Node AND\n  if(isNotNull(pod_phase), pod_phase == \"Running\", else: true)\n}, from: -2m\n| fieldsAdd pods_percent = valuesOp1[] / valuesOp2[] * 100\n| fieldsAdd pods_percent = arrayFirst(pods_percent)",
+      "davis": {
+        "enabled": false,
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      },
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "thresholds": [
+          {
+            "id": 1,
+            "field": "pods_percent",
+            "title": "",
+            "isEnabled": true,
+            "rules": [
+              {
+                "id": 0,
+                "color": {
+                  "Default": "var(--dt-colors-charts-status-ideal-default, #2f6863)"
+                },
+                "comparator": "≥",
+                "label": "",
+                "value": 0
+              },
+              {
+                "id": 1,
+                "color": {
+                  "Default": "var(--dt-colors-charts-status-warning-default, #eca440)"
+                },
+                "comparator": "≥",
+                "label": "",
+                "value": 80
+              },
+              {
+                "id": 2,
+                "color": {
+                  "Default": "var(--dt-colors-charts-status-critical-default, #c4233b)"
+                },
+                "comparator": "≥",
+                "label": "",
+                "value": 90
+              }
+            ]
+          }
+        ],
+        "chartSettings": {
+          "xAxisScaling": "analyzedTimeframe",
+          "gapPolicy": "connect",
+          "circleChartSettings": {
+            "groupingThresholdType": "relative",
+            "groupingThresholdValue": 0,
+            "valueType": "relative"
+          },
+          "categoryOverrides": {},
+          "categoricalBarChartSettings": {
+            "categoryAxisLabel": "interval,pods_percent",
+            "valueAxisLabel": "pods_percent",
+            "categoryAxis": [
+              "interval",
+              "pods_percent"
+            ],
+            "valueAxis": [
+              "pods_percent"
+            ],
+            "tooltipVariant": "single"
+          },
+          "fieldMapping": {
+            "timestamp": "timeframe",
+            "leftAxisValues": [
+              "valuesOp1",
+              "valuesOp2"
+            ]
+          },
+          "hiddenLegendFields": [],
+          "bandChartSettings": {
+            "lower": "valuesOp1",
+            "upper": "valuesOp2"
+          },
+          "truncationMode": "middle",
+          "xAxisLabel": "timeframe",
+          "xAxisIsLabelVisible": false,
+          "valueRepresentation": "absolute",
+          "leftYAxisSettings": {
+            "isLabelVisible": true,
+            "label": "Kubernetes: Pod count • Kubernetes: Node - pod allocatable count"
+          }
+        },
+        "singleValue": {
+          "showLabel": false,
+          "label": "pods_percent",
+          "prefixIcon": "",
+          "recordField": "pods_percent",
+          "autoscale": true,
+          "sparklineSettings": {
+            "isVisible": false,
+            "showTicks": false,
+            "record": "valuesOp2"
+          },
+          "alignment": "center",
+          "trend": {
+            "isVisible": false,
+            "trendType": "auto",
+            "upward": {
+              "Default": "var(--dt-colors-charts-categorical-color-02-default, #2c2f3f)"
+            },
+            "neutral": {
+              "Default": "var(--dt-colors-charts-categorical-color-02-default, #2c2f3f)"
+            },
+            "downward": {
+              "Default": "var(--dt-colors-charts-categorical-color-02-default, #2c2f3f)"
+            },
+            "isRelative": false
+          },
+          "colorThresholdTarget": "background"
+        },
+        "table": {
+          "rowDensity": "condensed",
+          "enableSparklines": false,
+          "hiddenColumns": [],
+          "lineWrapIds": [],
+          "columnWidths": {},
+          "columnTypeOverrides": [
+            {
+              "fields": [
+                "valuesOp1",
+                "valuesOp2"
+              ],
+              "value": "sparkline",
+              "id": 1734617361980
+            }
+          ]
+        },
+        "honeycomb": {
+          "shape": "hexagon",
+          "legend": "auto",
+          "dataMappings": {},
+          "displayedFields": [],
+          "colorMode": "color-palette",
+          "colorPalette": "blue"
+        },
+        "histogram": {
+          "dataMappings": [
+            {
+              "valueAxis": "interval",
+              "rangeAxis": ""
+            },
+            {
+              "valueAxis": "pods_percent",
+              "rangeAxis": ""
+            }
+          ],
+          "variant": "single",
+          "displayedFields": []
+        },
+        "valueBoundaries": {
+          "min": "auto",
+          "max": "auto"
+        },
+        "unitsOverrides": [
+          {
+            "identifier": "pods_percent",
+            "unitCategory": "percentage",
+            "baseUnit": "percent",
+            "displayUnit": null,
+            "decimals": 2,
+            "suffix": "",
+            "delimiter": false,
+            "added": 1717763264287
+          }
+        ]
+      },
+      "querySettings": {
+        "maxResultRecords": 20000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 100,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      }
+    },
+    "9": {
+      "type": "data",
+      "title": "CPU Utilization (Requests)",
+      "query": "timeseries {\n  valuesOp1 = sum(dt.kubernetes.container.requests_cpu),\n  valuesOp2 = sum(dt.kubernetes.node.cpu_allocatable)\n}, filter: {\n  k8s.cluster.name == $Cluster AND\n  k8s.node.name == $Node\n}, from: -2m\n| fieldsAdd requests_cpu_percent = valuesOp1[] / valuesOp2[] * 100\n| fieldsAdd requests_cpu_percent = arrayFirst(requests_cpu_percent)",
+      "davis": {
+        "enabled": false,
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      },
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "thresholds": [
+          {
+            "id": 1,
+            "field": "requests_cpu_percent",
+            "title": "",
+            "isEnabled": true,
+            "rules": [
+              {
+                "id": 0,
+                "color": {
+                  "Default": "var(--dt-colors-charts-status-ideal-default, #2f6863)"
+                },
+                "comparator": "≥",
+                "label": "",
+                "value": 0
+              },
+              {
+                "id": 1,
+                "color": {
+                  "Default": "var(--dt-colors-charts-status-warning-default, #eca440)"
+                },
+                "comparator": "≥",
+                "label": "",
+                "value": 100
+              },
+              {
+                "id": 2,
+                "color": {
+                  "Default": "var(--dt-colors-charts-status-critical-default, #c4233b)"
+                },
+                "comparator": "≥",
+                "label": "",
+                "value": 130
+              }
+            ]
+          }
+        ],
+        "chartSettings": {
+          "xAxisScaling": "analyzedTimeframe",
+          "gapPolicy": "connect",
+          "circleChartSettings": {
+            "groupingThresholdType": "relative",
+            "groupingThresholdValue": 0,
+            "valueType": "relative"
+          },
+          "categoryOverrides": {},
+          "categoricalBarChartSettings": {
+            "categoryAxisLabel": "interval,requests_cpu_percent",
+            "valueAxisLabel": "requests_cpu_percent",
+            "categoryAxis": [
+              "interval",
+              "requests_cpu_percent"
+            ],
+            "valueAxis": [
+              "requests_cpu_percent"
+            ],
+            "tooltipVariant": "single"
+          },
+          "fieldMapping": {
+            "timestamp": "timeframe",
+            "leftAxisValues": [
+              "valuesOp1",
+              "valuesOp2"
+            ]
+          },
+          "hiddenLegendFields": [],
+          "bandChartSettings": {
+            "lower": "valuesOp1",
+            "upper": "valuesOp2"
+          },
+          "truncationMode": "middle",
+          "xAxisLabel": "timeframe",
+          "xAxisIsLabelVisible": false,
+          "valueRepresentation": "absolute",
+          "leftYAxisSettings": {
+            "isLabelVisible": true,
+            "label": "Kubernetes: Container - CPU requests • Kubernetes: Node - CPU allocatable"
+          }
+        },
+        "singleValue": {
+          "showLabel": false,
+          "label": "requests_cpu_percent",
+          "prefixIcon": "",
+          "recordField": "requests_cpu_percent",
+          "autoscale": true,
+          "sparklineSettings": {
+            "isVisible": false,
+            "showTicks": false,
+            "record": "valuesOp2"
+          },
+          "alignment": "center",
+          "trend": {
+            "isVisible": false,
+            "trendType": "auto",
+            "upward": {
+              "Default": "var(--dt-colors-charts-categorical-color-02-default, #2c2f3f)"
+            },
+            "neutral": {
+              "Default": "var(--dt-colors-charts-categorical-color-02-default, #2c2f3f)"
+            },
+            "downward": {
+              "Default": "var(--dt-colors-charts-categorical-color-02-default, #2c2f3f)"
+            },
+            "isRelative": false
+          },
+          "colorThresholdTarget": "background"
+        },
+        "table": {
+          "rowDensity": "condensed",
+          "enableSparklines": false,
+          "hiddenColumns": [],
+          "lineWrapIds": [],
+          "columnWidths": {},
+          "columnTypeOverrides": [
+            {
+              "fields": [
+                "valuesOp1",
+                "valuesOp2"
+              ],
+              "value": "sparkline",
+              "id": 1734617362156
+            }
+          ]
+        },
+        "honeycomb": {
+          "shape": "hexagon",
+          "legend": "auto",
+          "dataMappings": {},
+          "displayedFields": [],
+          "colorMode": "color-palette",
+          "colorPalette": "blue"
+        },
+        "histogram": {
+          "dataMappings": [
+            {
+              "valueAxis": "interval",
+              "rangeAxis": ""
+            },
+            {
+              "valueAxis": "requests_cpu_percent",
+              "rangeAxis": ""
+            }
+          ],
+          "variant": "single",
+          "displayedFields": []
+        },
+        "valueBoundaries": {
+          "min": "auto",
+          "max": "auto"
+        },
+        "unitsOverrides": [
+          {
+            "identifier": "requests_cpu_percent",
+            "unitCategory": "percentage",
+            "baseUnit": "percent",
+            "displayUnit": null,
+            "decimals": 2,
+            "suffix": "",
+            "delimiter": false,
+            "added": 1715164486934
+          }
+        ]
+      },
+      "querySettings": {
+        "maxResultRecords": 20000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 100,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      }
+    },
+    "10": {
+      "type": "data",
+      "title": "Memory Utilization (Requests)",
+      "query": "timeseries {\n  valuesOp1 = sum(dt.kubernetes.container.requests_memory),\n  valuesOp2 = sum(dt.kubernetes.node.memory_allocatable)\n}, filter: {\n  k8s.cluster.name == $Cluster AND\n  k8s.node.name == $Node\n}, from: -2m\n| fieldsAdd requests_memory_percent = valuesOp1[] / valuesOp2[] * 100\n| fieldsAdd requests_memory_percent = arrayFirst(requests_memory_percent)",
+      "davis": {
+        "enabled": false,
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      },
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "thresholds": [
+          {
+            "id": 1,
+            "field": "requests_memory_percent",
+            "title": "",
+            "isEnabled": true,
+            "rules": [
+              {
+                "id": 0,
+                "color": {
+                  "Default": "var(--dt-colors-charts-status-ideal-default, #2f6863)"
+                },
+                "comparator": "≥",
+                "label": "",
+                "value": 0
+              },
+              {
+                "id": 1,
+                "color": {
+                  "Default": "var(--dt-colors-charts-status-warning-default, #eca440)"
+                },
+                "comparator": "≥",
+                "label": "",
+                "value": 100
+              },
+              {
+                "id": 2,
+                "color": {
+                  "Default": "var(--dt-colors-charts-status-critical-default, #c4233b)"
+                },
+                "comparator": "≥",
+                "label": "",
+                "value": 130
+              }
+            ]
+          }
+        ],
+        "chartSettings": {
+          "xAxisScaling": "analyzedTimeframe",
+          "gapPolicy": "connect",
+          "circleChartSettings": {
+            "groupingThresholdType": "relative",
+            "groupingThresholdValue": 0,
+            "valueType": "relative"
+          },
+          "categoryOverrides": {},
+          "categoricalBarChartSettings": {
+            "categoryAxisLabel": "interval,requests_memory_percent",
+            "valueAxisLabel": "requests_memory_percent",
+            "categoryAxis": [
+              "interval",
+              "requests_memory_percent"
+            ],
+            "valueAxis": [
+              "requests_memory_percent"
+            ],
+            "tooltipVariant": "single"
+          },
+          "fieldMapping": {
+            "timestamp": "timeframe",
+            "leftAxisValues": [
+              "valuesOp1",
+              "valuesOp2"
+            ]
+          },
+          "hiddenLegendFields": [],
+          "bandChartSettings": {
+            "lower": "valuesOp1",
+            "upper": "valuesOp2"
+          },
+          "truncationMode": "middle",
+          "xAxisLabel": "timeframe",
+          "xAxisIsLabelVisible": false,
+          "valueRepresentation": "absolute",
+          "leftYAxisSettings": {
+            "isLabelVisible": true,
+            "label": "Kubernetes: Container - memory requests • Kubernetes: Node - memory allocatable"
+          }
+        },
+        "singleValue": {
+          "showLabel": false,
+          "label": "requests_memory_percent",
+          "prefixIcon": "",
+          "recordField": "requests_memory_percent",
+          "autoscale": true,
+          "sparklineSettings": {
+            "isVisible": false,
+            "showTicks": false,
+            "record": "valuesOp1"
+          },
+          "alignment": "center",
+          "trend": {
+            "isVisible": false,
+            "trendType": "auto",
+            "isLabelVisible": false,
+            "upward": {
+              "Default": "var(--dt-colors-charts-categorical-color-02-default, #2c2f3f)"
+            },
+            "neutral": {
+              "Default": "var(--dt-colors-charts-categorical-color-02-default, #2c2f3f)"
+            },
+            "downward": {
+              "Default": "var(--dt-colors-charts-categorical-color-02-default, #2c2f3f)"
+            },
+            "isRelative": false
+          },
+          "colorThresholdTarget": "background"
+        },
+        "table": {
+          "rowDensity": "condensed",
+          "enableSparklines": false,
+          "hiddenColumns": [],
+          "lineWrapIds": [],
+          "columnWidths": {},
+          "columnTypeOverrides": [
+            {
+              "fields": [
+                "valuesOp1",
+                "valuesOp2"
+              ],
+              "value": "sparkline",
+              "id": 1734617362075
+            }
+          ]
+        },
+        "honeycomb": {
+          "shape": "hexagon",
+          "legend": "auto",
+          "dataMappings": {},
+          "displayedFields": [],
+          "colorMode": "color-palette",
+          "colorPalette": "blue"
+        },
+        "histogram": {
+          "dataMappings": [
+            {
+              "valueAxis": "interval",
+              "rangeAxis": ""
+            },
+            {
+              "valueAxis": "requests_memory_percent",
+              "rangeAxis": ""
+            }
+          ],
+          "variant": "single",
+          "displayedFields": []
+        },
+        "valueBoundaries": {
+          "min": "auto",
+          "max": "auto"
+        },
+        "unitsOverrides": [
+          {
+            "identifier": "requests_memory_percent",
+            "unitCategory": "percentage",
+            "baseUnit": "percent",
+            "displayUnit": null,
+            "decimals": 2,
+            "suffix": "",
+            "delimiter": false,
+            "added": 1715164486934
+          }
+        ]
+      },
+      "querySettings": {
+        "maxResultRecords": 20000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 100,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      }
+    },
+    "11": {
+      "type": "data",
+      "title": "CPU Utilization (Limits)",
+      "query": "timeseries {\n  valuesOp1 = sum(dt.kubernetes.container.limits_cpu),\n  valuesOp2 = sum(dt.kubernetes.node.cpu_allocatable)\n}, filter: {\n  k8s.cluster.name == $Cluster AND\n  k8s.node.name == $Node\n}, from: -2m\n| fieldsAdd limits_cpu_percent = valuesOp1[] / valuesOp2[] * 100\n| fieldsAdd limits_cpu_percent = arrayFirst(limits_cpu_percent)",
+      "davis": {
+        "enabled": false,
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      },
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "thresholds": [
+          {
+            "id": 1,
+            "field": "limits_cpu_percent",
+            "title": "",
+            "isEnabled": true,
+            "rules": [
+              {
+                "id": 0,
+                "color": {
+                  "Default": "var(--dt-colors-charts-status-ideal-default, #2f6863)"
+                },
+                "comparator": "≥",
+                "label": "",
+                "value": 0
+              },
+              {
+                "id": 1,
+                "color": {
+                  "Default": "var(--dt-colors-charts-status-warning-default, #eca440)"
+                },
+                "comparator": "≥",
+                "label": "",
+                "value": 100
+              },
+              {
+                "id": 2,
+                "color": {
+                  "Default": "var(--dt-colors-charts-status-critical-default, #c4233b)"
+                },
+                "comparator": "≥",
+                "label": "",
+                "value": 150
+              }
+            ]
+          }
+        ],
+        "chartSettings": {
+          "xAxisScaling": "analyzedTimeframe",
+          "gapPolicy": "connect",
+          "circleChartSettings": {
+            "groupingThresholdType": "relative",
+            "groupingThresholdValue": 0,
+            "valueType": "relative"
+          },
+          "categoryOverrides": {},
+          "categoricalBarChartSettings": {
+            "categoryAxisLabel": "interval,limits_cpu_percent",
+            "valueAxisLabel": "limits_cpu_percent",
+            "categoryAxis": [
+              "interval",
+              "limits_cpu_percent"
+            ],
+            "valueAxis": [
+              "limits_cpu_percent"
+            ],
+            "tooltipVariant": "single"
+          },
+          "fieldMapping": {
+            "timestamp": "timeframe",
+            "leftAxisValues": [
+              "valuesOp1",
+              "valuesOp2"
+            ]
+          },
+          "hiddenLegendFields": [],
+          "bandChartSettings": {
+            "lower": "valuesOp1",
+            "upper": "valuesOp2"
+          },
+          "truncationMode": "middle",
+          "xAxisLabel": "timeframe",
+          "xAxisIsLabelVisible": false,
+          "valueRepresentation": "absolute",
+          "leftYAxisSettings": {
+            "isLabelVisible": true,
+            "label": "Kubernetes: Container - CPU limits • Kubernetes: Node - CPU allocatable"
+          }
+        },
+        "singleValue": {
+          "showLabel": false,
+          "label": "limits_cpu_percent",
+          "prefixIcon": "",
+          "recordField": "limits_cpu_percent",
+          "autoscale": true,
+          "sparklineSettings": {
+            "isVisible": false,
+            "showTicks": false,
+            "record": "valuesOp2"
+          },
+          "alignment": "center",
+          "trend": {
+            "isVisible": false,
+            "trendType": "auto",
+            "upward": {
+              "Default": "var(--dt-colors-charts-categorical-color-02-default, #2c2f3f)"
+            },
+            "neutral": {
+              "Default": "var(--dt-colors-charts-categorical-color-02-default, #2c2f3f)"
+            },
+            "downward": {
+              "Default": "var(--dt-colors-charts-categorical-color-02-default, #2c2f3f)"
+            },
+            "isRelative": false
+          },
+          "colorThresholdTarget": "background"
+        },
+        "table": {
+          "rowDensity": "condensed",
+          "enableSparklines": false,
+          "hiddenColumns": [],
+          "lineWrapIds": [],
+          "columnWidths": {},
+          "columnTypeOverrides": [
+            {
+              "fields": [
+                "valuesOp1",
+                "valuesOp2"
+              ],
+              "value": "sparkline",
+              "id": 1734617362206
+            }
+          ]
+        },
+        "honeycomb": {
+          "shape": "hexagon",
+          "legend": "auto",
+          "dataMappings": {},
+          "displayedFields": [],
+          "colorMode": "color-palette",
+          "colorPalette": "blue"
+        },
+        "histogram": {
+          "dataMappings": [
+            {
+              "valueAxis": "interval",
+              "rangeAxis": ""
+            },
+            {
+              "valueAxis": "limits_cpu_percent",
+              "rangeAxis": ""
+            }
+          ],
+          "variant": "single",
+          "displayedFields": []
+        },
+        "valueBoundaries": {
+          "min": "auto",
+          "max": "auto"
+        },
+        "unitsOverrides": [
+          {
+            "identifier": "limits_cpu_percent",
+            "unitCategory": "percentage",
+            "baseUnit": "percent",
+            "displayUnit": null,
+            "decimals": 2,
+            "suffix": "",
+            "delimiter": false,
+            "added": 1715164486934
+          }
+        ]
+      },
+      "querySettings": {
+        "maxResultRecords": 20000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 100,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      }
+    },
+    "12": {
+      "type": "data",
+      "title": "Memory Utilization (Limits)",
+      "query": "timeseries {\n  valuesOp1 = sum(dt.kubernetes.container.limits_memory),\n  valuesOp2 = sum(dt.kubernetes.node.memory_allocatable)\n}, filter: {\n  k8s.cluster.name == $Cluster AND\n  k8s.node.name == $Node\n}, from: -2m\n| fieldsAdd limits_memory_percent = valuesOp1[] / valuesOp2[] * 100\n| fieldsAdd limits_memory_percent = arrayFirst(limits_memory_percent)",
+      "davis": {
+        "enabled": false,
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      },
+      "visualization": "singleValue",
+      "visualizationSettings": {
+        "thresholds": [
+          {
+            "id": 1,
+            "field": "limits_memory_percent",
+            "title": "",
+            "isEnabled": true,
+            "rules": [
+              {
+                "id": 0,
+                "color": {
+                  "Default": "var(--dt-colors-charts-status-ideal-default, #2f6863)"
+                },
+                "comparator": "≥",
+                "label": "",
+                "value": 0
+              },
+              {
+                "id": 1,
+                "color": {
+                  "Default": "var(--dt-colors-charts-status-warning-default, #eca440)"
+                },
+                "comparator": "≥",
+                "label": "",
+                "value": 100
+              },
+              {
+                "id": 2,
+                "color": {
+                  "Default": "var(--dt-colors-charts-status-critical-default, #c4233b)"
+                },
+                "comparator": "≥",
+                "label": "",
+                "value": 150
+              }
+            ]
+          }
+        ],
+        "chartSettings": {
+          "xAxisScaling": "analyzedTimeframe",
+          "gapPolicy": "connect",
+          "circleChartSettings": {
+            "groupingThresholdType": "relative",
+            "groupingThresholdValue": 0,
+            "valueType": "relative"
+          },
+          "categoryOverrides": {},
+          "categoricalBarChartSettings": {
+            "categoryAxisLabel": "interval,limits_memory_percent",
+            "valueAxisLabel": "limits_memory_percent",
+            "categoryAxis": [
+              "interval",
+              "limits_memory_percent"
+            ],
+            "valueAxis": [
+              "limits_memory_percent"
+            ],
+            "tooltipVariant": "single"
+          },
+          "fieldMapping": {
+            "timestamp": "timeframe",
+            "leftAxisValues": [
+              "valuesOp1",
+              "valuesOp2"
+            ]
+          },
+          "hiddenLegendFields": [],
+          "bandChartSettings": {
+            "lower": "valuesOp1",
+            "upper": "valuesOp2"
+          },
+          "truncationMode": "middle",
+          "xAxisLabel": "timeframe",
+          "xAxisIsLabelVisible": false,
+          "valueRepresentation": "absolute",
+          "leftYAxisSettings": {
+            "isLabelVisible": true,
+            "label": "Kubernetes: Container - memory limits • Kubernetes: Node - memory allocatable"
+          }
+        },
+        "singleValue": {
+          "showLabel": false,
+          "label": "limits_memory_percent",
+          "prefixIcon": "",
+          "recordField": "limits_memory_percent",
+          "autoscale": true,
+          "sparklineSettings": {
+            "isVisible": false,
+            "showTicks": false,
+            "record": "valuesOp2"
+          },
+          "alignment": "center",
+          "trend": {
+            "isVisible": false,
+            "trendType": "auto",
+            "upward": {
+              "Default": "var(--dt-colors-charts-categorical-color-02-default, #2c2f3f)"
+            },
+            "neutral": {
+              "Default": "var(--dt-colors-charts-categorical-color-02-default, #2c2f3f)"
+            },
+            "downward": {
+              "Default": "var(--dt-colors-charts-categorical-color-02-default, #2c2f3f)"
+            },
+            "isRelative": false
+          },
+          "colorThresholdTarget": "background"
+        },
+        "table": {
+          "rowDensity": "condensed",
+          "enableSparklines": false,
+          "hiddenColumns": [],
+          "lineWrapIds": [],
+          "columnWidths": {},
+          "columnTypeOverrides": [
+            {
+              "fields": [
+                "valuesOp1",
+                "valuesOp2"
+              ],
+              "value": "sparkline",
+              "id": 1734617362195
+            }
+          ]
+        },
+        "honeycomb": {
+          "shape": "hexagon",
+          "legend": "auto",
+          "dataMappings": {},
+          "displayedFields": [],
+          "colorMode": "color-palette",
+          "colorPalette": "blue"
+        },
+        "histogram": {
+          "dataMappings": [
+            {
+              "valueAxis": "interval",
+              "rangeAxis": ""
+            },
+            {
+              "valueAxis": "limits_memory_percent",
+              "rangeAxis": ""
+            }
+          ],
+          "variant": "single",
+          "displayedFields": []
+        },
+        "valueBoundaries": {
+          "min": "auto",
+          "max": "auto"
+        },
+        "unitsOverrides": [
+          {
+            "identifier": "limits_memory_percent",
+            "unitCategory": "percentage",
+            "baseUnit": "percent",
+            "displayUnit": null,
+            "decimals": 2,
+            "suffix": "",
+            "delimiter": false,
+            "added": 1715164486934
+          }
+        ]
+      },
+      "querySettings": {
+        "maxResultRecords": 20000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 100,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      }
+    },
+    "13": {
+      "type": "data",
+      "title": "CPU Usage per Pod",
+      "query": "timeseries {\n  cpu_usage = sum(dt.kubernetes.container.cpu_usage, rollup:avg)\n}, filter: {\n  k8s.cluster.name == $Cluster AND\n  k8s.node.name == $Node\n}, by: { dt.entity.cloud_application_instance, k8s.pod.name }\n| filter isNotNull(cpu_usage)\n| sort cpu_usage desc\n| limit 20",
+      "davis": {
+        "enabled": false,
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      },
+        "visualization": "areaChart",
+      "visualizationSettings": {
+        "thresholds": [],
+        "chartSettings": {
+          "gapPolicy": "gap",
+          "circleChartSettings": {
+            "groupingThresholdType": "relative",
+            "groupingThresholdValue": 0,
+            "valueType": "relative"
+          },
+          "categoryOverrides": {},
+          "categoricalBarChartSettings": {
+            "categoryAxis": "k8s.pod.name",
+            "categoryAxisLabel": "k8s.pod.name",
+            "valueAxis": "interval",
+            "valueAxisLabel": "interval"
+          },
+          "fieldMapping": {
+            "timestamp": "timeframe",
+            "leftAxisValues": [
+              "cpu_usage"
+            ],
+            "leftAxisDimensions": [
+              "dt.entity.cloud_application_instance",
+              "k8s.pod.name"
+            ]
+          },
+          "hiddenLegendFields": [
+            "dt.entity.cloud_application_instance"
+          ],
+          "legend": {
+            "position": "bottom",
+            "hidden": false
+          },
+          "xAxisLabel": "timeframe",
+          "xAxisIsLabelVisible": false,
+          "valueRepresentation": "absolute",
+          "leftYAxisSettings": {
+            "isLabelVisible": true,
+            "label": "Kubernetes: Container - CPU usage"
+          },
+          "xAxisScaling": "analyzedTimeframe",
+          "truncationMode": "middle"
+        },
+        "singleValue": {
+          "showLabel": true,
+          "label": "id",
+          "prefixIcon": "",
+          "recordField": "id",
+          "autoscale": true,
+          "alignment": "center",
+          "colorThresholdTarget": "value",
+          "trend": {
+            "trendType": "auto",
+            "isVisible": true
+          }
+        },
+        "table": {
+          "rowDensity": "condensed",
+          "enableSparklines": false,
+          "hiddenColumns": [],
+          "lineWrapIds": [],
+          "columnWidths": {},
+          "columnTypeOverrides": [
+            {
+              "fields": [
+                "cpu_usage"
+              ],
+              "value": "sparkline",
+              "id": 1734617362001
+            }
+          ]
+        },
+        "honeycomb": {
+          "shape": "hexagon",
+          "legend": "auto",
+          "dataMappings": {
+            "value": "dt.entity.cloud_application_instance"
+          },
+          "displayedFields": [
+            "dt.entity.cloud_application_instance"
+          ],
+          "colorMode": "color-palette",
+          "colorPalette": "categorical"
+        },
+        "histogram": {
+          "dataMappings": [
+            {
+              "valueAxis": "interval",
+              "rangeAxis": ""
+            }
+          ],
+          "variant": "single",
+          "displayedFields": [
+            "dt.entity.cloud_application_instance",
+            "k8s.pod.name"
+          ]
+        },
+        "valueBoundaries": {
+          "min": "auto",
+          "max": "auto"
+        },
+        "unitsOverrides": [
+          {
+            "identifier": "cpu_usage",
+            "unitCategory": "unspecified",
+            "baseUnit": "millicore",
+            "displayUnit": null,
+            "decimals": 2,
+            "suffix": "",
+            "delimiter": false,
+            "added": 1715178821410
+          }
+        ]
+      },
+      "querySettings": {
+        "maxResultRecords": 20000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 100,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      }
+    },
+    "15": {
+      "type": "data",
+      "title": "CPU Quota",
+      "query": "timeseries {\n  cpu_usage = sum(dt.kubernetes.container.cpu_usage),\n  cpu_throttled = sum(dt.kubernetes.container.cpu_throttled),\n  requests_cpu = sum(dt.kubernetes.container.requests_cpu),\n  limits_cpu = sum(dt.kubernetes.container.limits_cpu)\n}, filter: {\n  k8s.cluster.name == $Cluster AND\n  k8s.node.name == $Node\n}, by: { dt.entity.cloud_application_instance, k8s.pod.name },\nfrom: -2m,\nnonempty: true,\nunion: true\n| fieldsRemove interval, timeframe\n| fieldsAdd cpu_usage = arrayFirst(cpu_usage)\n| fieldsAdd cpu_throttled = arrayFirst(cpu_throttled)\n| fieldsAdd requests_cpu = arrayFirst(requests_cpu)\n| fieldsAdd limits_cpu = arrayFirst(limits_cpu)\n| fieldsAdd requests_cpu_percent = cpu_usage / requests_cpu * 100\n| fieldsAdd limits_cpu_percent = cpu_usage / limits_cpu * 100\n| fieldsAdd cpu_slack = (requests_cpu - cpu_usage) / 1000\n| sort cpu_usage desc\n| fieldsRename `Name` = k8s.pod.name, `CPU Usage` = cpu_usage, `CPU Throttled` = cpu_throttled, `CPU Requests` = requests_cpu, `CPU Requests %` = requests_cpu_percent, `CPU Limits` = limits_cpu, `CPU Limits %` = limits_cpu_percent, `CPU Slack` = cpu_slack\n",
+      "davis": {
+        "enabled": false,
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      },
+      "visualization": "table",
+      "visualizationSettings": {
+        "thresholds": [],
+        "chartSettings": {
+          "gapPolicy": "connect",
+          "circleChartSettings": {
+            "groupingThresholdType": "relative",
+            "groupingThresholdValue": 0,
+            "valueType": "relative"
+          },
+          "categoryOverrides": {},
+          "categoricalBarChartSettings": {
+            "categoryAxis": "dt.entity.cloud_application_instance",
+            "categoryAxisLabel": "dt.entity.cloud_application_instance",
+            "valueAxis": "CPU Usage",
+            "valueAxisLabel": "CPU Usage"
+          }
+        },
+        "singleValue": {
+          "showLabel": true,
+          "label": "id",
+          "prefixIcon": "",
+          "recordField": "id",
+          "autoscale": true,
+          "alignment": "center",
+          "colorThresholdTarget": "value",
+          "trend": {
+            "trendType": "auto",
+            "isVisible": true
+          }
+        },
+        "table": {
+          "rowDensity": "condensed",
+          "enableSparklines": false,
+          "hiddenColumns": [
+            [
+              "id"
+            ],
+            [
+              "namespace.id"
+            ],
+            [
+              "namespace.labels"
+            ],
+            [
+              "namespace.annotations"
+            ],
+            [
+              "namespace.age"
+            ],
+            [
+              "cluster.id"
+            ],
+            [
+              "dt.entity.cloud_application_instance"
+            ]
+          ],
+          "lineWrapIds": [],
+          "columnWidths": {
+            "[\"limits_cpu\"]": 124.046875,
+            "[\"requests_cpu\"]": 142.453125,
+            "[\"namespace.name\"]": 231.140625,
+            "[\"cpu_usage\"]": 157.8125,
+            "[\"cpu_throttled\"]": 164.46875,
+            "[\"requests_cpu_percent\"]": 191.28125,
+            "[\"limits_cpu_percent\"]": 175.859375
+          },
+          "sortBy": {
+            "columnId": "[\"CPU Usage\"]",
+            "direction": "descending"
+          },
+          "columnTypeOverrides": []
+        },
+        "honeycomb": {
+          "shape": "hexagon",
+          "legend": "auto",
+          "dataMappings": {
+            "value": "dt.entity.cloud_application_instance"
+          },
+          "displayedFields": [
+            "dt.entity.cloud_application_instance"
+          ],
+          "colorMode": "color-palette",
+          "colorPalette": "categorical"
+        },
+        "histogram": {
+          "dataMappings": [
+            {
+              "valueAxis": "CPU Usage",
+              "rangeAxis": ""
+            },
+            {
+              "valueAxis": "CPU Requests",
+              "rangeAxis": ""
+            },
+            {
+              "valueAxis": "CPU Requests %",
+              "rangeAxis": ""
+            },
+            {
+              "valueAxis": "CPU Slack",
+              "rangeAxis": ""
+            },
+            {
+              "valueAxis": "CPU Throttled",
+              "rangeAxis": ""
+            },
+            {
+              "valueAxis": "CPU Limits",
+              "rangeAxis": ""
+            },
+            {
+              "valueAxis": "CPU Limits %",
+              "rangeAxis": ""
+            }
+          ],
+          "variant": "single",
+          "displayedFields": [
+            "dt.entity.cloud_application_instance",
+            "Name"
+          ]
+        },
+        "valueBoundaries": {
+          "min": "auto",
+          "max": "auto"
+        },
+        "unitsOverrides": [
+          {
+            "identifier": "CPU Usage",
+            "unitCategory": "unspecified",
+            "baseUnit": "millicore",
+            "displayUnit": null,
+            "decimals": 1,
+            "suffix": "",
+            "delimiter": false,
+            "added": 1715618539759
+          },
+          {
+            "identifier": "CPU Throttled",
+            "unitCategory": "unspecified",
+            "baseUnit": "millicore",
+            "displayUnit": null,
+            "decimals": 1,
+            "suffix": "",
+            "delimiter": false,
+            "added": 1715618579313
+          },
+          {
+            "identifier": "CPU Requests",
+            "unitCategory": "unspecified",
+            "baseUnit": "millicore",
+            "displayUnit": null,
+            "decimals": 1,
+            "suffix": "",
+            "delimiter": false,
+            "added": 1715618597827
+          },
+          {
+            "identifier": "CPU Limits",
+            "unitCategory": "unspecified",
+            "baseUnit": "millicore",
+            "displayUnit": null,
+            "decimals": 1,
+            "suffix": "",
+            "delimiter": false,
+            "added": 1715618609828
+          },
+          {
+            "identifier": "CPU Slack",
+            "unitCategory": "unspecified",
+            "baseUnit": "core",
+            "displayUnit": null,
+            "decimals": 1,
+            "suffix": "",
+            "delimiter": false,
+            "added": 1715618618693
+          },
+          {
+            "identifier": "CPU Requests %",
+            "unitCategory": "percentage",
+            "baseUnit": "percent",
+            "displayUnit": null,
+            "decimals": 2,
+            "suffix": "",
+            "delimiter": false,
+            "added": 1715686358414
+          },
+          {
+            "identifier": "CPU Limits %",
+            "unitCategory": "percentage",
+            "baseUnit": "percent",
+            "displayUnit": null,
+            "decimals": 2,
+            "suffix": "",
+            "delimiter": false,
+            "added": 1715687708509
+          }
+        ]
+      },
+      "querySettings": {
+        "maxResultRecords": 20000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 100,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      }
+    },
+    "17": {
+      "type": "markdown",
+      "title": "",
+      "content": "### CPU\n"
+    },
+    "18": {
+      "type": "markdown",
+      "title": "",
+      "content": "### Memory"
+    },
+    "19": {
+      "type": "data",
+      "title": "Memory Usage per Pod",
+      "query": "timeseries {\n  memory_usage = sum(dt.kubernetes.container.memory_working_set, rollup:avg)\n}, filter: {\n  k8s.cluster.name == $Cluster AND\n  k8s.node.name == $Node\n}, by: { dt.entity.cloud_application_instance, k8s.pod.name }\n| sort memory_usage desc\n| limit 20",
+      "davis": {
+        "enabled": false,
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      },
+      "visualization": "areaChart",
+      "visualizationSettings": {
+        "thresholds": [],
+        "chartSettings": {
+          "gapPolicy": "gap",
+          "circleChartSettings": {
+            "groupingThresholdType": "relative",
+            "groupingThresholdValue": 0,
+            "valueType": "relative"
+          },
+          "categoryOverrides": {},
+          "categoricalBarChartSettings": {
+            "categoryAxis": "k8s.pod.name",
+            "categoryAxisLabel": "k8s.pod.name",
+            "valueAxis": "interval",
+            "valueAxisLabel": "interval"
+          },
+          "fieldMapping": {
+            "timestamp": "timeframe",
+            "leftAxisValues": [
+              "memory_usage"
+            ],
+            "leftAxisDimensions": [
+              "dt.entity.cloud_application_instance",
+              "k8s.pod.name"
+            ]
+          },
+          "hiddenLegendFields": [
+            "dt.entity.cloud_application_instance"
+          ],
+          "legend": {
+            "position": "bottom",
+            "hidden": false
+          },
+          "xAxisLabel": "timeframe",
+          "xAxisIsLabelVisible": false,
+          "valueRepresentation": "absolute",
+          "leftYAxisSettings": {
+            "isLabelVisible": true,
+            "label": "Kubernetes: Container - working set memory"
+          }
+        },
+        "singleValue": {
+          "showLabel": true,
+          "label": "id",
+          "prefixIcon": "",
+          "recordField": "id",
+          "autoscale": true,
+          "alignment": "center",
+          "colorThresholdTarget": "value",
+          "trend": {
+            "trendType": "auto",
+            "isVisible": true
+          }
+        },
+        "table": {
+          "rowDensity": "condensed",
+          "enableSparklines": false,
+          "hiddenColumns": [],
+          "lineWrapIds": [],
+          "columnWidths": {},
+          "columnTypeOverrides": [
+            {
+              "fields": [
+                "memory_usage"
+              ],
+              "value": "sparkline",
+              "id": 1734615889733
+            }
+          ]
+        },
+        "honeycomb": {
+          "shape": "hexagon",
+          "legend": "auto",
+          "dataMappings": {
+            "value": "dt.entity.cloud_application_instance"
+          },
+          "displayedFields": [
+            "dt.entity.cloud_application_instance"
+          ],
+          "colorMode": "color-palette",
+          "colorPalette": "categorical"
+        },
+        "histogram": {
+          "dataMappings": [
+            {
+              "valueAxis": "interval",
+              "rangeAxis": ""
+            }
+          ],
+          "variant": "single",
+          "displayedFields": [
+            "dt.entity.cloud_application_instance",
+            "k8s.pod.name"
+          ]
+        },
+        "valueBoundaries": {
+          "min": "auto",
+          "max": "auto"
+        },
+        "unitsOverrides": []
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 100,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      }
+    },
+    "20": {
+      "type": "data",
+      "title": "Memory Quota",
+      "query": "timeseries {\n  memory_usage = sum(dt.kubernetes.container.memory_working_set),\n  requests_memory = sum(dt.kubernetes.container.requests_memory),\n  limits_memory = sum(dt.kubernetes.container.limits_memory)\n}, filter: {\n  k8s.cluster.name == $Cluster AND\n  k8s.node.name == $Node\n}, by: { dt.entity.cloud_application_instance, k8s.pod.name },\nfrom: -2m,\nnonempty: true,\nunion: true\n| fieldsRemove interval, timeframe\n| fieldsAdd memory_usage = arrayFirst(memory_usage)\n| fieldsAdd requests_memory = arrayFirst(requests_memory)\n| fieldsAdd limits_memory = arrayFirst(limits_memory)\n| fieldsAdd requests_memory_percent = memory_usage / requests_memory * 100\n| fieldsAdd limits_memory_percent = memory_usage / limits_memory * 100\n| fieldsAdd memory_slack = (requests_memory - memory_usage)\n| sort memory_usage desc\n| fieldsRename `Name` = k8s.pod.name, `Memory Usage` = memory_usage, `Memory Requests` = requests_memory, `Memory Requests %` = requests_memory_percent, `Memory Limits` = limits_memory, `Memory Limits %` = limits_memory_percent, `Memory Slack` = memory_slack",
+      "davis": {
+        "enabled": false,
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      },
+      "visualization": "table",
+      "visualizationSettings": {
+        "thresholds": [],
+        "chartSettings": {
+          "gapPolicy": "connect",
+          "circleChartSettings": {
+            "groupingThresholdType": "relative",
+            "groupingThresholdValue": 0,
+            "valueType": "relative"
+          },
+          "categoryOverrides": {},
+          "categoricalBarChartSettings": {
+            "categoryAxis": "dt.entity.cloud_application_instance",
+            "categoryAxisLabel": "dt.entity.cloud_application_instance",
+            "valueAxis": "Memory Usage",
+            "valueAxisLabel": "Memory Usage"
+          }
+        },
+        "singleValue": {
+          "showLabel": true,
+          "label": "id",
+          "prefixIcon": "",
+          "recordField": "id",
+          "autoscale": true,
+          "alignment": "center",
+          "colorThresholdTarget": "value",
+          "trend": {
+            "trendType": "auto",
+            "isVisible": true
+          }
+        },
+        "table": {
+          "rowDensity": "condensed",
+          "enableSparklines": false,
+          "hiddenColumns": [
+            [
+              "id"
+            ],
+            [
+              "namespace.id"
+            ],
+            [
+              "namespace.labels"
+            ],
+            [
+              "namespace.annotations"
+            ],
+            [
+              "namespace.age"
+            ],
+            [
+              "cluster.id"
+            ],
+            [
+              "dt.entity.cloud_application_instance"
+            ]
+          ],
+          "lineWrapIds": [],
+          "columnWidths": {
+            "[\"limits_cpu\"]": 124.046875,
+            "[\"requests_cpu\"]": 142.453125,
+            "[\"namespace.name\"]": 231.140625,
+            "[\"cpu_usage\"]": 157.8125,
+            "[\"cpu_throttled\"]": 164.46875,
+            "[\"requests_cpu_percent\"]": 191.28125,
+            "[\"limits_cpu_percent\"]": 175.859375
+          },
+          "sortBy": {
+            "columnId": "[\"Name\"]",
+            "direction": "unset"
+          },
+          "columnTypeOverrides": []
+        },
+        "honeycomb": {
+          "shape": "hexagon",
+          "legend": "auto",
+          "dataMappings": {
+            "value": "dt.entity.cloud_application_instance"
+          },
+          "displayedFields": [
+            "dt.entity.cloud_application_instance"
+          ],
+          "colorMode": "color-palette",
+          "colorPalette": "categorical"
+        },
+        "histogram": {
+          "dataMappings": [
+            {
+              "valueAxis": "Memory Usage",
+              "rangeAxis": ""
+            },
+            {
+              "valueAxis": "Memory Requests",
+              "rangeAxis": ""
+            },
+            {
+              "valueAxis": "Memory Limits",
+              "rangeAxis": ""
+            },
+            {
+              "valueAxis": "Memory Requests %",
+              "rangeAxis": ""
+            },
+            {
+              "valueAxis": "Memory Limits %",
+              "rangeAxis": ""
+            },
+            {
+              "valueAxis": "Memory Slack",
+              "rangeAxis": ""
+            }
+          ],
+          "variant": "single",
+          "displayedFields": [
+            "dt.entity.cloud_application_instance",
+            "Name"
+          ]
+        },
+        "valueBoundaries": {
+          "min": "auto",
+          "max": "auto"
+        },
+        "unitsOverrides": [
+          {
+            "identifier": "Memory Usage",
+            "unitCategory": "data",
+            "baseUnit": "byte",
+            "displayUnit": null,
+            "decimals": 2,
+            "suffix": "",
+            "delimiter": false,
+            "added": 1715698159493
+          },
+          {
+            "identifier": "Memory Requests",
+            "unitCategory": "data",
+            "baseUnit": "byte",
+            "displayUnit": null,
+            "decimals": 2,
+            "suffix": "",
+            "delimiter": false,
+            "added": 1715698181310
+          },
+          {
+            "identifier": "Memory Requests %",
+            "unitCategory": "percentage",
+            "baseUnit": "percent",
+            "displayUnit": null,
+            "decimals": 2,
+            "suffix": "",
+            "delimiter": false,
+            "added": 1715698189862
+          },
+          {
+            "identifier": "Memory Limits",
+            "unitCategory": "data",
+            "baseUnit": "byte",
+            "displayUnit": null,
+            "decimals": 2,
+            "suffix": "",
+            "delimiter": false,
+            "added": 1715698204816
+          },
+          {
+            "identifier": "Memory Limits %",
+            "unitCategory": "percentage",
+            "baseUnit": "percent",
+            "displayUnit": null,
+            "decimals": 2,
+            "suffix": "",
+            "delimiter": false,
+            "added": 1715698213152
+          },
+          {
+            "identifier": "Memory Slack",
+            "unitCategory": "data",
+            "baseUnit": "byte",
+            "displayUnit": null,
+            "decimals": 2,
+            "suffix": "",
+            "delimiter": false,
+            "added": 1715698222294
+          }
+        ]
+      },
+      "querySettings": {
+        "maxResultRecords": 20000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 100,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      }
+    },
+    "21": {
+      "type": "markdown",
+      "title": "",
+      "content": "### Node: [$Node](/ui/intent/dynatrace.kubernetes/entityKubernetesNode/#{\"id\":\"$NodeID\"})\nUnderstand pod resource consumption on your Kubernetes nodes. If you don't see data, [start monitoring your cluster](/ui/apps/dynatrace.kubernetes/onboarding) or [explore this dashboard in our Playground](https://wkf10640.apps.dynatrace.com/ui/document/dynatrace.kubernetes.kubernetes-node-pods)"
+    }
+  },
+  "layouts": {
+    "6": {
+      "x": 0,
+      "y": 2,
+      "w": 6,
+      "h": 2
+    },
+    "7": {
+      "x": 0,
+      "y": 4,
+      "w": 6,
+      "h": 2
+    },
+    "8": {
+      "x": 18,
+      "y": 2,
+      "w": 6,
+      "h": 4
+    },
+    "9": {
+      "x": 6,
+      "y": 2,
+      "w": 6,
+      "h": 2
+    },
+    "10": {
+      "x": 6,
+      "y": 4,
+      "w": 6,
+      "h": 2
+    },
+    "11": {
+      "x": 12,
+      "y": 2,
+      "w": 6,
+      "h": 2
+    },
+    "12": {
+      "x": 12,
+      "y": 4,
+      "w": 6,
+      "h": 2
+    },
+    "13": {
+      "x": 0,
+      "y": 7,
+      "w": 24,
+      "h": 5
+    },
+    "15": {
+      "x": 0,
+      "y": 12,
+      "w": 24,
+      "h": 8
+    },
+    "17": {
+      "x": 0,
+      "y": 6,
+      "w": 24,
+      "h": 1
+    },
+    "18": {
+      "x": 0,
+      "y": 20,
+      "w": 24,
+      "h": 1
+    },
+    "19": {
+      "x": 0,
+      "y": 21,
+      "w": 24,
+      "h": 5
+    },
+    "20": {
+      "x": 0,
+      "y": 26,
+      "w": 24,
+      "h": 8
+    },
+    "21": {
+      "x": 0,
+      "y": 0,
+      "w": 24,
+      "h": 2
+    }
+  },
+  "importedWithCode": false,
+  "settings": {}
+}

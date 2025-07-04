@@ -1,0 +1,30 @@
+{
+  "_id": "6849ad8f8ee8024998d31fb3",
+  "application": "MyAfterburner",
+  "testType": "loadTest",
+  "testEnvironment": "acc",
+  "grafana": "Default",
+  "dashboardLabel": "Docker container metrics perfana-demo-afterburner-fe-1",
+  "dashboardId": 11,
+  "dashboardUid": "docker-telegraf-influxdb",
+  "panel": {
+    "id": 1,
+    "title": "1-CPU",
+    "type": "timeseries",
+    "yAxesFormat": "percent",
+    "requirement": {"operator": "lt", "value": 70},
+    "benchmark": {"operator": "pst", "value": 10, "absoluteFailureThreshold": 0},
+    "excludeRampUpTime": true,
+    "averageAll": false,
+    "validateWithDefaultIfNoData": false,
+    "validateWithDefaultIfNoDataValue": 0,
+    "evaluateType": "max"
+  },
+  "excludeRampupTime": false,
+  "averageAll": false,
+  "valid": true,
+  "genericCheckId": "docker-docker-telegraf-influxdb-1",
+  "perfanaInfo": "Created or updated by Perfana Kotlin 2025-06-11T16:23:43.794348221Z",
+  "_class": "io.perfana.shared.Benchmark",
+  "applicationDashboardId": "6849ad8f8ee8024998d31fa8"
+}

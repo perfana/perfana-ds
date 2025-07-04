@@ -1,0 +1,186 @@
+Metadata-Version: 2.4
+Name: perfana-ds
+Version: 0.2.7
+Summary: Data-science REST api service for Perfana.
+Author: Perfana
+Maintainer-email: Lodewic van Twillert <lodewic@perfana.io>
+Project-URL: homepage, https://perfana.io
+Project-URL: documentation, https://perfana.io
+Project-URL: repository, https://github.com/perfana/perfana-ds-fastapi
+Keywords: data-science,kedro,fastapi,kedro
+Classifier: Programming Language :: Python
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: pydantic~=2.6
+Requires-Dist: pydantic-settings~=2.0
+Requires-Dist: fastapi~=0.110
+Requires-Dist: celery~=5.3
+Requires-Dist: pandas~=2.2
+Requires-Dist: orjson>=3.8.5
+Requires-Dist: uvicorn~=0.27
+Requires-Dist: pymongo~=4.6
+Requires-Dist: httpx~=0.26
+Requires-Dist: pymongoarrow~=1.3
+Requires-Dist: motor~=3.5
+Requires-Dist: celery~=5.3
+Requires-Dist: gevent~=24.2
+Requires-Dist: flower
+Provides-Extra: test
+Requires-Dist: pytest==8.3.3; extra == "test"
+Requires-Dist: pytest-cov>=2.5.1; extra == "test"
+Requires-Dist: pytest-dotenv>=0.5.2; extra == "test"
+Provides-Extra: dev
+Requires-Dist: plotly~=5.18; extra == "dev"
+Requires-Dist: matplotlib; extra == "dev"
+Requires-Dist: pre-commit~=4.0; extra == "dev"
+
+# Perfana Data-Science FastAPI service
+
+- [Project Organisation](#project_organization)
+- [Setup](#Setup)
+- [Run](#Run)
+
+## <a id="project_organization"></a>Project Organization
+
+    │    │    │
+    ├── notebooks/                  <- Jupyter notebooks. Naming convention is a short `-` delimited
+    │                                  description, a number (for ordering), and the creator's initials,
+    │                                  e.g. `initial-data-exploration-01-hg`.
+    │
+    ├── tests/                      <- Unit tests.
+    |
+    ├── scripts/                    <- Scripts to run the train and predict jobs
+    │
+    ├── src/
+    │   │
+    │   └── perfana_ds/             <- Core data pipelines package, mostly built using large MongoDB aggregations.
+    │   │
+    │   └── perfana_ds_api/         <- FastAPI service and Celery tasks
+    │
+    ├── .github/                    <- Github Actions workflows
+    │
+    ├── .run/                       <- Pycharm run configurations
+    │
+    ├── environment.yml             <- Conda dev environment definition file for local environment.
+    │
+    ├── .pre-commit-config.yaml     <- pre-commit configuration.
+    │
+    ├── pyproject.toml              <- configuration of CLI tools such as mypy, black and isort.
+    │
+    ├── environment.yml             <- Conda dev environment definition file.
+    │
+    ├── setup.py                    <- Script to install the package via pip with `pip install -e .`
+    │
+    ├── Dockerfile                  <- Dockerfile of main FastAPI application.
+    │
+    ├── docker-compose.yml          <- Docker Compose definition to locally run all components using Docker.
+    │
+    ├── .dockerignore               <- List of files to ignore when building Docker images.
+    │
+    ├── .gitignore                  <- Describes files that should not be committed to version control
+    │
+    └── README.md                   <- The top-level README for developers using this project.
+
+## Setup
+
+Install the virtual environment with conda and activate it:
+
+```bash
+$ conda env create -f environment.yml
+$ conda activate perfana-ds-fastapi
+```
+
+## Run
+
+The applications consists of the FastAPI service, and two Celery workers. You can use the docker-compose setup,
+or run the services separately.
+
+When using docker-compose, create a `docker.env` file with the same contents as your regular `.env` file. Docker-compose
+is only used for development.
+
+### FastAPI
+
+```shell
+uvicorn perfana_ds_api.app:app --port 8080
+```
+
+### Celery | Default
+
+Most tasks are handled by the default Celery worker.
+
+We can start a single worker on Windows machines using `--pool=solo` for development.
+
+```shell
+celery -A perfana_ds_api.worker worker --pool=solo --loglevel=info -Q celery
+```
+
+If you are not on Windows or in development, then don't use `--pool=solo`, but apply some concurrency. For example,
+
+```shell
+celery -A perfana_ds_api.worker worker -c 5 --loglevel=info -Q celery
+```
+
+### Celery | Metrics
+
+This worker is used to collect metrics from Grafana. Because tasks on this worker make a lot of HTTP requests to Grafana, it
+may have a different allowed concurrency than tasks that do not.
+
+```shell
+celery -A src.perfana_ds_api.worker worker --pool=solo --loglevel=info -Q metrics
+```
+
+Or, when not using `--pool=solo`, for example,
+
+```shell
+celery -A src.perfana_ds_api.worker worker -c 5 --loglevel=info -Q metrics
+```
+
+Tune the concurrency so that the Grafana server is not overloaded with HTTP requests.
+
+
+### Install pre-commit
+
+Using [pre-commit](https://pre-commit.com/) we make sure to always apply checks locally before commits can be pushed to git.
+Check the `.pre-commit-config.yml` for details.
+
+Run `pre-commit install` to register the configuration with your local repository.
+
+We always apply
+
+- `black` to autoformat our code
+- `isort` to autosort imports
+- `mypy` to statically check type-hints
+
+### .env file
+
+Either set your environment variables or create a `.env` file, which is .gitignored.
+Fill it with the following variables,
+
+```.env
+PROJECT_NAME = "Perfana Datascience"
+MONGO_URL = "mongodb://root:*************@localhost:27018/?directConnection=true"
+MONGO_DB = "perfana"
+
+GRAFANA_URL = http://localhost:3000
+GRAFANA_CONCURRENCY = 30
+GRAFANA_BATCH_SIZE = 20
+
+```
+
+### Install Chocolatey and make on Windows
+
+[Chocolatey](https://docs.chocolatey.org/en-us/choco/setup) is a package manager for windows, similar to apt-get for linux. To install, run the following as admin in Powershell:
+```bash
+@"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "[System.Net.ServicePointManager]::SecurityProtocol = 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))" && SET "PATH=%PATH%;%ALLUSERSPROFILE%\chocolatey\bin"
+```
+
+Then use chocolatey to install make.
+```bash
+choco install make
+```
+
+## Run
+
+```bash
+docker-compose up
+```

@@ -1,0 +1,30 @@
+{
+  "_id": "6849adad8ee8024998d31fc3",
+  "application": "MyAfterburner",
+  "testType": "loadTest",
+  "testEnvironment": "acc",
+  "grafana": "Default",
+  "dashboardLabel": "Gatling AfterburnerBasicSimulation",
+  "dashboardId": 23,
+  "dashboardUid": "gatling-overview-influxdb",
+  "panel": {
+    "id": 52,
+    "title": "52-Response times 50th percentile",
+    "type": "timeseries",
+    "yAxesFormat": "ms",
+    "benchmark": {"operator": "pst-pct", "value": 20, "absoluteFailureThreshold": 100},
+    "excludeRampUpTime": true,
+    "averageAll": false,
+    "validateWithDefaultIfNoData": false,
+    "validateWithDefaultIfNoDataValue": 0,
+    "evaluateType": "avg"
+  },
+  "excludeRampupTime": false,
+  "averageAll": false,
+  "valid": true,
+  "genericCheckId": "gatling-gatling-overview-influxdb-52",
+  "perfanaInfo": "Created or updated by Perfana Kotlin 2025-06-11T16:24:13.507104388Z",
+  "_class": "io.perfana.shared.Benchmark",
+  "evaluateType": "avg",
+  "applicationDashboardId": "6849adad8ee8024998d31fb5"
+}
