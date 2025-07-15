@@ -252,7 +252,10 @@ def run_adapt_pipeline(  # noqa: PLR0912, too many branches
                     {"testRunId": test_run_id}
                 )
                 adapt_ok = True
-                if conclusion_doc:
+                if tr.adapt and tr.adapt.mode == "BASELINE":
+                    # For BASELINE mode, always set adaptTestRunOK to true
+                    adapt_ok = True
+                elif conclusion_doc:
                     if conclusion_doc.get("conclusion") == "REGRESSION":
                         adapt_ok = False
                     # PASSED or SKIPPED = True
