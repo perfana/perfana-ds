@@ -263,15 +263,25 @@ def run_adapt_pipeline(  # noqa: PLR0912, too many branches
                     else {}
                 )
                 consolidated["adaptTestRunOK"] = adapt_ok
-                # overall = all 4 keys True
-                overall = all(
-                    [
-                        consolidated.get("meetsRequirement", True),
-                        consolidated.get("benchmarkPreviousTestRunOK", True),
-                        consolidated.get("benchmarkBaselineTestRunOK", True),
-                        adapt_ok,
-                    ]
-                )
+                # overall = all 4 keys True, but for BASELINE mode, ignore adaptTestRunOK
+                if tr.adapt and tr.adapt.mode == "BASELINE":
+                    # For BASELINE mode, overall should be true even if adaptTestRunOK is false
+                    overall = all(
+                        [
+                            consolidated.get("meetsRequirement", True),
+                            consolidated.get("benchmarkPreviousTestRunOK", True),
+                            consolidated.get("benchmarkBaselineTestRunOK", True),
+                        ]
+                    )
+                else:
+                    overall = all(
+                        [
+                            consolidated.get("meetsRequirement", True),
+                            consolidated.get("benchmarkPreviousTestRunOK", True),
+                            consolidated.get("benchmarkBaselineTestRunOK", True),
+                            adapt_ok,
+                        ]
+                    )
                 consolidated["overall"] = overall
                 catalog.testRuns.collection.update_one(
                     {"_id": tr.id}, {"$set": {"consolidatedResult": consolidated}}
