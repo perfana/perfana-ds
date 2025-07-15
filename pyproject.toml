@@ -42,7 +42,7 @@ dependencies = [
 
 [project.optional-dependencies]
 test = [
-    "pytest==8.3.3",
+    "pytest==8.4.1",
     "pytest-cov>=2.5.1",
     "pytest-dotenv>=0.5.2"
 ]
